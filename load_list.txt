@@ -1,0 +1,1 @@
+var load_list=[[["sprite","game_ncg",-10,-10,"objects[obj_name].visible=true;objects[obj_name].sx=objects[obj_name].x;objects[obj_name].sy=objects[obj_name].y;",""]]];

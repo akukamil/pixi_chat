@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+		html,
+		body {
+		margin: 0;
+		padding: 0;
+		height: 100%;
+	}
+	
+	body {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: black;
+		flex-direction: column
+	}
+    
+
+		
+</style>
+
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-app.js"></script>
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-database.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+<script>
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyCitj-X8MDE_8DXUxrv_Z2OsTal4AKS6Q4",
+    authDomain: "m-chat-bf30d.firebaseapp.com",
+    projectId: "m-chat-bf30d",
+    storageBucket: "m-chat-bf30d.appspot.com",
+	databaseURL: "https://m-chat-bf30d-default-rtdb.firebaseio.com",
+    messagingSenderId: "45792509645",
+    appId: "1:45792509645:web:4d12eb2a8afcc10253b384"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  var database=firebase.database();
+  var my_name=prompt("Enter your name");
+</script>
+
+
+<script src="load_list.txt"> </script>	
+<script src="pixi.min.js"></script>	
+<script src="index.js"> </script>
+	  
+<body onload="load()">
+
+</body>
+
+</html>
