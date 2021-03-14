@@ -6,6 +6,42 @@ var chat;
 
 var game_objects=[];
 
+class grid_placer_class
+{	
+	constructor(x,y,width,num_of_columns)
+	{
+		this.x=x+20;
+		this.y=y+20;
+		this.width=width-40;
+		this.num_of_columns=num_of_columns;
+		this.min_col=0;
+		this.columns_bottom=[];
+		this.column_width=this.width/this.num_of_columns;
+		for (var i=0;i<this.num_of_columns;i++)
+			this.columns_bottom[i]=this.y;
+		
+	}
+
+	get_new_placement(w,h)
+	{
+		
+		var ratio = this.column_width/w;		
+		var calc_width=w*ratio;
+		var calc_height=h*ratio;
+		
+		
+		//определяем самую короткую колонку
+		this.min_col = 0;
+		for (var i = 1; i < this.num_of_columns; i++)
+			if (this.columns_bottom[i] < this.columns_bottom[this.min_col]) this.min_col = i;
+		
+		var res_bottom=this.columns_bottom[this.min_col];
+		this.columns_bottom[this.min_col]+=calc_height;
+		return [this.x+this.column_width*this.min_col,res_bottom,calc_width,calc_height]	
+	}
+	
+}
+
 class chat_class
 {
 	constructor(left=20, top=20, width=200, height=400, input_height=30)
@@ -111,6 +147,7 @@ class chat_class
 		//это текст который вводится
 		this.static_objects.input_text=new PIXI.BitmapText('', {font: '25px Century Gothic', align: 'left'});	
 		this.static_objects.input_text.anchor.set(0,1);
+		this.static_objects.input_text.tint=0xFFFF00;
 		app.stage.addChild(this.static_objects.input_text);	
 		
 		//это плейсхолдер текстового поля
@@ -148,19 +185,18 @@ class chat_class
 				
 		//это объекы в меню
 		this.menu_items=[];	
-				
-		//это объект в меню 1
-		for (var i=0;i<2;i++)
+		for (var i=0;i<game_objects.length;i++)
 		{			
-			this.menu_items[i]=new PIXI.AnimatedSprite(game_objects[i]);
+			this.menu_items[i]={sprite: new PIXI.AnimatedSprite(game_objects[i]), frame : new PIXI.Sprite(game_res.resources["item_frame"].texture)};
 			if (game_objects[i].length>1)
-				this.menu_items[i].play();
-			this.menu_items[i].animationSpeed=0.2;
-			this.menu_items[i].interactive=true;
-			this.menu_items[i].buttonMode=true;		
-			this.menu_items[i].pointerdown=this.send_message.bind(this,i);
-			this.menu_items[i].visible=false;
-			app.stage.addChild(this.menu_items[i]);		
+				this.menu_items[i].sprite.play();
+			this.menu_items[i].sprite.animationSpeed=0.2;
+			this.menu_items[i].sprite.interactive=true;
+			this.menu_items[i].sprite.buttonMode=true;		
+			this.menu_items[i].sprite.pointerdown=this.send_message.bind(this,i);
+			this.menu_items[i].sprite.visible=false;
+			this.menu_items[i].frame.visible=false;
+			app.stage.addChild(this.menu_items[i].sprite,this.menu_items[i].frame);		
 		}	
 		
 		//располагаем все элементы чата в соответствии с заданными размерами и позициями
@@ -236,21 +272,29 @@ class chat_class
 		this.static_objects.menu_button.width=this.static_objects.input_bcg.height;
 				
 		//это фон объектов для добавления		
-		this.static_objects.menu_bcg.x=this.right-300-10;
-		this.static_objects.menu_bcg.y=this.top;
+		this.static_objects.menu_bcg.x=this.right-300-5;
+		this.static_objects.menu_bcg.y=this.bottom-300-5;
 		this.static_objects.menu_bcg.width=300;
 		this.static_objects.menu_bcg.height=300;
 		
-		//это элементы меню
+		//формируем меню в 2 колонки
+		var grid_places=new grid_placer_class(this.static_objects.menu_bcg.x,this.static_objects.menu_bcg.y,this.static_objects.menu_bcg.width,2);
+		
 		for (var i=0;i<this.menu_items.length;i++)
 		{
-			var ratio = 120/game_objects[i][0].width;		
-			this.menu_items[i].width=game_objects[i][0].width*ratio;
-			this.menu_items[i].height=game_objects[i][0].height*ratio;	
-			this.menu_items[i].x=this.static_objects.menu_bcg.x+15+i*120;
-			this.menu_items[i].y=this.static_objects.menu_bcg.y+15;			
-		}		
+			var place_data=grid_places.get_new_placement(game_objects[i][0].width,game_objects[i][0].height);			
+			this.menu_items[i].sprite.x=place_data[0];
+			this.menu_items[i].sprite.y=place_data[1];
+			this.menu_items[i].sprite.width=place_data[2];
+			this.menu_items[i].sprite.height=place_data[3];
+			
+			this.menu_items[i].frame.width=this.menu_items[i].sprite.width;
+			this.menu_items[i].frame.height=this.menu_items[i].sprite.height;	
+			this.menu_items[i].frame.x=this.menu_items[i].sprite.x;
+			this.menu_items[i].frame.y=this.menu_items[i].sprite.y;	
+		}
 	
+
 		//запускаем рекурсивное обновление стека сообщений,но порядок - снизу вверх от текущего топа.
 		if (this.new_msg_index!==-1)
 			this.rebuild_message(this.new_msg_index,this.stack_top);
@@ -335,14 +379,21 @@ class chat_class
 		//отображаем список объектов для добавления в чат
 		this.static_objects.menu_bcg.visible=!this.static_objects.menu_bcg.visible;
 		for (var i=0;i<this.menu_items.length;i++)
-			this.menu_items[i].visible=this.static_objects.menu_bcg.visible;
+		{
+			this.menu_items[i].sprite.visible=this.static_objects.menu_bcg.visible;		
+			this.menu_items[i].frame.visible=this.static_objects.menu_bcg.visible;		
+		}
+
 	}
 	
 	hide_menu()
 	{
 		this.static_objects.menu_bcg.visible=false;
 		for (var i=0;i<this.menu_items.length;i++)
-			this.menu_items[i].visible=this.static_objects.menu_bcg.visible;
+		{
+			this.menu_items[i].sprite.visible=this.static_objects.menu_bcg.visible;		
+			this.menu_items[i].frame.visible=this.static_objects.menu_bcg.visible;		
+		}
 	}
 			
 	get_oldest_message()
@@ -812,8 +863,9 @@ function load()
 	game_res.add("menu_bcg", "menu_bcg.png");
 	game_res.add("resize_corner", "resize_corner.png");
 	game_res.add("test_image", "image0.png");
+	game_res.add("item_frame", "item_frame.png");
 	game_res.add("m2_font", "m_font.fnt");
-	
+	game_res.add("image1", "image1.png");
 	
 	game_res.add("anim_0", "anim/0.png");
 	game_res.add("anim_1", "anim/1.png");
@@ -821,6 +873,16 @@ function load()
 	game_res.add("anim_3", "anim/3.png");
 	game_res.add("anim_4", "anim/4.png");
 	game_res.add("anim_5", "anim/5.png");
+	
+	game_res.add("coin_0", "coin/0.png");
+	game_res.add("coin_1", "coin/1.png");
+	game_res.add("coin_2", "coin/2.png");
+	game_res.add("coin_3", "coin/3.png");
+	game_res.add("coin_4", "coin/4.png");
+	game_res.add("coin_5", "coin/5.png");
+	
+	
+	
 				
 	game_res.load(load_complete);		
 	
@@ -868,8 +930,10 @@ function load()
 		//формируем базу анимационных объектов
 		game_objects[0]=[game_res.resources["test_image"].texture]
 		game_objects[1]=[game_res.resources["anim_0"].texture,game_res.resources["anim_1"].texture,game_res.resources["anim_2"].texture,game_res.resources["anim_3"].texture,game_res.resources["anim_4"].texture,game_res.resources["anim_5"].texture];
-				
-		
+		game_objects[2]=[game_res.resources["coin_0"].texture,game_res.resources["coin_1"].texture,game_res.resources["coin_2"].texture,game_res.resources["coin_3"].texture,game_res.resources["coin_4"].texture];
+		game_objects[3]=[game_res.resources["image1"].texture]		
+
+
 		//создаем чат
 		chat=new chat_class(20,50,300,300,35);
 				

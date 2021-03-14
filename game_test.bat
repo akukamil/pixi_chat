@@ -1,0 +1,1 @@
+C:\miniweb\miniweb.exe -r C:\Users\madina\Desktop\chat
