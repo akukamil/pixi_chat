@@ -191,6 +191,7 @@ class chat_class
 				
 		//это объекы в меню
 		this.menu_items=[];	
+		this.menu_items_container=new PIXI.Container();
 		for (var i=0;i<game_objects.length;i++)
 		{			
 			this.menu_items[i]={sprite: new PIXI.AnimatedSprite(game_objects[i]), frame : new PIXI.Sprite(game_res.resources["item_frame"].texture)};
@@ -202,8 +203,10 @@ class chat_class
 			this.menu_items[i].sprite.pointerdown=this.send_message.bind(this,i);
 			this.menu_items[i].sprite.visible=false;
 			this.menu_items[i].frame.visible=false;
-			app.stage.addChild(this.menu_items[i].sprite,this.menu_items[i].frame);		
+			this.menu_items_container.addChild(this.menu_items[i].sprite,this.menu_items[i].frame);		
 		}	
+		app.stage.addChild(this.menu_items_container);
+		
 		
 		//располагаем все элементы чата в соответствии с заданными размерами и позициями
 		this.arrange(left, top, width, height, input_height)
@@ -311,8 +314,8 @@ class chat_class
 	mouse_down(e)
 	{
 		//получаем и запоминаем текущее положение курсора мышки
-		var x=e.data.global.x/app.stage.scale.x;
-		var y=e.data.global.y/app.stage.scale.y;	
+		var x=app.renderer.plugins.interaction.eventData.data.global.x/app.stage.scale.x;
+		var y=app.renderer.plugins.interaction.eventData.data.global.y/app.stage.scale.y;	
 		
 		this.prv_mouse_x=x;
 		this.prv_mouse_y=y;
@@ -329,9 +332,9 @@ class chat_class
 	mouse_move(e)
 	{
 		//получаем текущее положение курсора мышки
-		var x=e.data.global.x/app.stage.scale.x;
-		var y=e.data.global.y/app.stage.scale.y;
-		
+		var x=app.renderer.plugins.interaction.eventData.data.global.x/app.stage.scale.x;
+		var y=app.renderer.plugins.interaction.eventData.data.global.y/app.stage.scale.y;
+
 		var dx=x-this.prv_mouse_x;
 		var dy=y-this.prv_mouse_y;	
 		
@@ -367,10 +370,6 @@ class chat_class
 	
 	corner_down(e)
 	{
-		//запоминаем положение мыши
-		var x=e.data.global.x;
-		var y=e.data.global.y;
-		
 		this.cor_down=true;
 	}
 
