@@ -370,6 +370,10 @@ class chat_class
 	
 	corner_down(e)
 	{
+		//запоминаем положение мыши
+		this.prv_mouse_x=app.renderer.plugins.interaction.eventData.data.global.x/app.stage.scale.x;
+		this.prv_mouse_y=app.renderer.plugins.interaction.eventData.data.global.y/app.stage.scale.y;
+		
 		this.cor_down=true;
 	}
 
