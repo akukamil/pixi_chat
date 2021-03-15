@@ -54,6 +54,10 @@ class chat_class
 		this.prv_mouse_y=0;
 		this.bcg_down=false;
 		
+		//указатель на чатом
+		this.hover_over_chat=false;
+		
+		
 		//контроль размеров чата
 		this.cor_down=false;
 		
@@ -86,7 +90,7 @@ class chat_class
 			message.objects.nickname_bcg.visible=false;
 			
 			//текст никнейма
-			message.objects.nickname_text=new PIXI.BitmapText('S', {font: '25px Century Gothic', align: 'left'}); 
+			message.objects.nickname_text=new PIXI.BitmapText('-', {font: '25px Century Gothic', align: 'left'}); 
 			message.objects.nickname_text.visible=false;
 			
 			//тест сообщения
@@ -132,7 +136,9 @@ class chat_class
 		this.static_objects.chat_bcg.interactive=true;
 		this.static_objects.chat_bcg.pointerdown=this.mouse_down.bind(this);
 		this.static_objects.chat_bcg.pointerup=this.mouse_up.bind(this);
-		this.static_objects.chat_bcg.pointermove=this.mouse_move.bind(this);		
+		this.static_objects.chat_bcg.pointermove=this.mouse_move.bind(this);	
+
+		
 		app.stage.addChild(this.static_objects.chat_bcg);		
 		
 		//это маска для контейнера сообщений, чтобы они не выходили за пределы чата
@@ -509,6 +515,8 @@ class chat_class
 		
 	shift_stack(val)
 	{
+
+		
 		for (var i=0;i<chat_size;i++)
 		{			
 			if (this.messages[i].objects.bcg.visible===true)
@@ -531,13 +539,19 @@ class chat_class
 		if (obj_id===undefined)
 			obj_id=this.messages[index].obj_id;
 		
+		
+		
+		//устанавливаем имя 
+		this.messages[index].objects.nickname_text.text=this.messages[index].sender[0];	
+		
+		
 		if (this.messages[index].obj_id===-1)
 		{			
 			//сначала определяем размеры нового текста и фона чтобы под него подстроить остальные элементы
 			this.messages[index].objects.b_text.maxWidth=this.width-5-30-5-5-5-5-20;
 			this.messages[index].objects.b_text.text=message_text;		
 			this.messages[index].objects.b_text.visible=true;		
-			this.messages[index].objects.nickname_text.text=this.messages[index].sender[0];	
+			
 						
 			//устанавливаем краткие обозначения размеров текста и фона для удобства
 			var text_w=this.messages[index].objects.b_text.width;
@@ -805,6 +819,7 @@ function resize()
 
 function on_wheel(e)
 {
+
 	//вниз
 	if (e.deltaY>0 )
 	{
