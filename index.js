@@ -425,8 +425,11 @@ class chat_class
 		//двигаем меню со всеми элементами
 		for (var i=0;i<this.menu_items.length;i++)
 		{
-			this.menu_items[i].x+=dx;
-			this.menu_items[i].y+=dy;
+			this.menu_items[i].sprite.x+=dx;
+			this.menu_items[i].sprite.y+=dy;
+			
+			this.menu_items[i].frame.x+=dx;
+			this.menu_items[i].frame.y+=dy;
 		}	
 		
 		//двигаем сообщения
