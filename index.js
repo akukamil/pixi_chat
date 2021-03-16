@@ -2,9 +2,50 @@ var PI_2=6.283185307, M_WIDTH=800, M_HEIGHT=450;
 var app, game_res, objects={}; 
 
 const chat_size=25;
-var chat;
+var chat,v_keyboard;
+var is_mobile;
+
+this.keys_list=[['Vkey_0',20,40,'й'],['Vkey_1',60,40,'ц'],['Vkey_2',100,40,'у'],['Vkey_3',140,40,'к'],['Vkey_4',180,40,'е'],['Vkey_5',220,40,'н'],['Vkey_6',260,40,'г'],['Vkey_7',300,40,'ш'],['Vkey_8',340,40,'щ'],['Vkey_9',380,40,'з'],['Vkey_10',420,40,'х'],['Vkey_11',460,40,'ъ'],['Vkey_12',40,80,'ф'],['Vkey_13',80,80,'ы'],['Vkey_14',120,80,'в'],['Vkey_15',160,80,'а'],['Vkey_16',200,80,'п'],['Vkey_17',240,80,'р'],['Vkey_18',280,80,'о'],['Vkey_19',320,80,'л'],['Vkey_20',360,80,'д'],['Vkey_21',400,80,'ж'],['Vkey_22',440,80,'э'],['Vkey_23',60,120,'я'],['Vkey_24',100,120,'ч'],['Vkey_25',140,120,'с'],['Vkey_26',180,120,'м'],['Vkey_27',220,120,'и'],['Vkey_28',260,120,'т'],['Vkey_29',300,120,'ь'],['Vkey_30',340,120,'б'],['Vkey_31',380,120,'ю'],['Vkey_32',420,120,','],['Vkey_33',460,120,'.'],['Vkey_34',20,120,'?'],['Vkey_35',160,160,' '],['Vkey_36',0,0,'1'],['Vkey_37',40,0,'2'],['Vkey_38',80,0,'3'],['Vkey_39',120,0,'4'],['Vkey_40',160,0,'5'],['Vkey_41',200,0,'6'],['Vkey_42',240,0,'7'],['Vkey_43',280,0,'8'],['Vkey_44',320,0,'9'],['Vkey_45',360,0,'0'],['Vkey_46',400,0,'-'],['Vkey_47',440,0,'='],['Vkey_48',480,0,'?'],['Vkey_49',400,160,'скрыть']];	
+
+
 
 var game_objects=[];
+
+class virtual_keyboard_class
+{
+	constructor()
+	{		
+					
+		
+		//загружаем спрайты клавиш виртуальной клавиатуры
+		this.container=new PIXI.Container();
+		for (var i=0;i<keys_list.length;i++)
+		{
+			const key_sprite=new PIXI.Sprite(game_res.resources[keys_list[i][0]].texture);
+			const vkey=keys_list[i][3]
+			key_sprite.x=keys_list[i][1]
+			key_sprite.y=keys_list[i][2]
+			key_sprite.interactive=true;
+			
+			if (keys_list[i][0]==='Vkey_48')
+				key_sprite.pointerdown=()=>{key_sprite.tint=0xFF0000;chat.remove_last_key()};
+			else if (keys_list[i][0]==='Vkey_49')
+				key_sprite.pointerdown=()=>{key_sprite.tint=0xFF0000;this.container.visible=false};
+			else
+				key_sprite.pointerdown=()=>{key_sprite.tint=0xFF0000;chat.send_key(vkey)};
+			
+			key_sprite.pointerup=()=>{key_sprite.tint=0xFFFFFF};
+			key_sprite.pointerout=()=>{key_sprite.tint=0xFFFFFF};
+			this.container.addChild(key_sprite);
+		}
+		this.container.alpha=0.8;
+		this.container.visible=false;
+		this.container.y=0;
+		this.container.x=0;
+		this.container.width=M_WIDTH;
+		app.stage.addChild(this.container);
+	}
+}
 
 class grid_placer_class
 {	
@@ -148,6 +189,8 @@ class chat_class
 		
 		//это фон для поля ввода текста
 		this.static_objects.input_bcg=new PIXI.Sprite(game_res.resources["input_bcg"].texture);		
+		this.static_objects.input_bcg.interactive=true;
+		this.static_objects.input_bcg.pointerdown=()=>{if (is_mobile){v_keyboard.container.visible=true};};
 		app.stage.addChild(this.static_objects.input_bcg);			
 		
 		//это текст который вводится
@@ -210,6 +253,8 @@ class chat_class
 		
 		//располагаем все элементы чата в соответствии с заданными размерами и позициями
 		this.arrange(left, top, width, height, input_height)
+
+
 
 	}
 	
@@ -379,7 +424,6 @@ class chat_class
 
 	corner_up()
 	{
-
 		this.cor_down=false;
 	}	
 	
@@ -737,8 +781,16 @@ class chat_class
 	remove_last_key()
 	{
 		this.static_objects.input_text.text=this.static_objects.input_text.text.slice(0, -1);		
+		var num_of_line=this.static_objects.input_text.height/35;
+		this.static_objects.input_bcg.height=num_of_line*this.input_height;
+		this.static_objects.input_bcg.y=this.bottom-(num_of_line-1)*this.input_height
+		this.static_objects.input_text.y=this.static_objects.input_bcg.y+this.static_objects.input_bcg.height;		
+		
 		this.static_objects.text_cursor.y=this.static_objects.input_text.y;
 		this.static_objects.text_cursor.x=this.static_objects.input_text.x+this.static_objects.input_text.width;
+		
+		if (this.static_objects.input_text.text==='')
+			this.static_objects.input_placeholder.visible=true;
 	}
 		
 	send_message(obj_id)
@@ -776,6 +828,30 @@ class chat_class
 
 		//очищаем панель набора текста
 		this.static_objects.input_text.text="";	
+	}
+		
+	wheel_event(e)
+	{
+		
+		//вниз
+		if (e.deltaY>0 )
+		{
+			if (this.stack_bottom>this.bottom)
+				this.shift_stack(-25);
+			else
+				this.browsing_mode=false;
+		}	
+			 
+		//вверх
+		if (e.deltaY<0 )
+		{
+			if (this.top>this.stack_top)
+			{
+				this.shift_stack(25);	
+				this.browsing_mode=true;
+			}
+		}		
+		
 	}
 		
 	process()
@@ -820,29 +896,6 @@ function resize()
     app.stage.scale.set(nvw / M_WIDTH, nvh / M_HEIGHT);
 }
 
-function on_wheel(e)
-{
-
-	//вниз
-	if (e.deltaY>0 )
-	{
-		if (chat.stack_bottom>chat.bottom)
-			chat.shift_stack(-25);
-		else
-			chat.browsing_mode=false;
-	}	
-	 	 
-	//вверх
-	if (e.deltaY<0 )
-	{
-		if (chat.top>chat.stack_top)
-		{
-			chat.shift_stack(25);	
-			chat.browsing_mode=true;
-		}
-	}	
-}
-
 function load()
 {
 	//проверяем WEB GL	
@@ -870,6 +923,13 @@ function load()
 			if (load_list[l][i][0]=="sprite" || load_list[l][i][0]=="image") 
 				game_res.add(load_list[l][i][1], "res/"+load_list[l][i][1]+".png");
 	
+	
+	//загружаем клавиши виртуальной клавиатуры
+	for (var i=0;i<keys_list.length;i++)
+		game_res.add(keys_list[i][0], "keys/"+keys_list[i][0]+".png");
+	
+	
+	
 	//загружаем ресурсы для чата
 	game_res.add("chat_bcg", "chat_bcg.png");
 	game_res.add("message_bcg", "message_bcg.png");
@@ -887,6 +947,10 @@ function load()
 	game_res.add("item_frame", "item_frame.png");
 	game_res.add("m2_font", "m_font.fnt");
 	game_res.add("image1", "image1.png");
+	
+	game_res.add("t_image_1", "t_image_1.png");
+	game_res.add("t_image_2", "t_image_2.png");
+	
 	
 	game_res.add("anim_0", "anim/0.png");
 	game_res.add("anim_1", "anim/1.png");
@@ -954,9 +1018,18 @@ function load()
 		game_objects[2]=[game_res.resources["coin_0"].texture,game_res.resources["coin_1"].texture,game_res.resources["coin_2"].texture,game_res.resources["coin_3"].texture,game_res.resources["coin_4"].texture];
 		game_objects[3]=[game_res.resources["image1"].texture]		
 
+		//проверяем тип платформы
+		if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) )
+			is_mobile=true
+		else
+			is_mobile=false
+
 
 		//создаем чат
 		chat=new chat_class(20,50,300,300,35);
+				
+		//создаем виртуальную клавиатуру
+		v_keyboard=new virtual_keyboard_class();	
 				
 		window.onkeydown = function (e)
 		{		
@@ -974,7 +1047,7 @@ function load()
 				chat.send_message(-1);
 		}
 		
-		window.addEventListener("mousewheel", on_wheel);		
+		window.addEventListener("mousewheel", chat.wheel_event.bind(chat));		
 					
 
 		//это событие нового сообщения из базы данных firebase
@@ -988,6 +1061,9 @@ function load()
 		});
 		
 		
+
+	
+	
 		//запускаем главный цикл
 		main_loop();
 	}
